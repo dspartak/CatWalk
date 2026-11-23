@@ -62,10 +62,45 @@ public static class CatWalkSceneBuilder
         DestroyIfExists("ScoreManager");
         DestroyIfExists("UI_Canvas");
 
-        // 4. Ground
+        // 4. Forest Environment & Ground
+        DestroyIfExists("Forest");
+        string fbxPath = "Assets/Models/forest.fbx";
+        GameObject forestPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(fbxPath);
+
+        if (forestPrefab != null)
+        {
+            ModelImporter mi = AssetImporter.GetAtPath(fbxPath) as ModelImporter;
+            if (mi != null && !mi.addCollider)
+            {
+                mi.addCollider = true;
+                mi.SaveAndReimport();
+                forestPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(fbxPath);
+            }
+
+            GameObject forest = Object.Instantiate(forestPrefab);
+            forest.name = "Forest";
+            forest.transform.position = Vector3.zero;
+            forest.tag = "Ground";
+
+            foreach (var mf in forest.GetComponentsInChildren<MeshFilter>())
+            {
+                mf.gameObject.tag = "Ground";
+                MeshCollider mc = mf.gameObject.GetComponent<MeshCollider>();
+                if (mc == null) mc = mf.gameObject.AddComponent<MeshCollider>();
+                mc.sharedMesh = mf.sharedMesh;
+
+                MeshRenderer mr = mf.GetComponent<MeshRenderer>();
+                if (mr != null && (mr.sharedMaterial == null || mr.sharedMaterial.name.StartsWith("Default")))
+                {
+                    mr.sharedMaterial = groundMat;
+                }
+            }
+        }
+
+        // Safety base plane
         GameObject ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
         ground.name = "Ground";
-        ground.transform.position = Vector3.zero;
+        ground.transform.position = new Vector3(0, -0.05f, 0);
         ground.transform.localScale = new Vector3(5f, 1f, 5f);
         ground.tag = "Ground";
         ground.GetComponent<MeshRenderer>().sharedMaterial = groundMat;
@@ -413,6 +448,7 @@ public static class CatWalkSceneBuilder
 
     static void EnsureDirectories()
     {
+        if (!AssetDatabase.IsValidFolder("Assets/Models")) AssetDatabase.CreateFolder("Assets", "Models");
         if (!AssetDatabase.IsValidFolder("Assets/Textures")) AssetDatabase.CreateFolder("Assets", "Textures");
         if (!AssetDatabase.IsValidFolder("Assets/Materials")) AssetDatabase.CreateFolder("Assets", "Materials");
         if (!AssetDatabase.IsValidFolder("Assets/Prefabs")) AssetDatabase.CreateFolder("Assets", "Prefabs");
