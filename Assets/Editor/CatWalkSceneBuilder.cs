@@ -454,7 +454,8 @@ public static class CatWalkSceneBuilder
 
     static void EnsureDirectories()
     {
-        if (!AssetDatabase.IsValidFolder("Assets/Shaders")) AssetDatabase.CreateFolder("Assets", "Shaders");`n        if (!AssetDatabase.IsValidFolder("Assets/Models")) AssetDatabase.CreateFolder("Assets", "Models");
+        if (!AssetDatabase.IsValidFolder("Assets/Shaders")) AssetDatabase.CreateFolder("Assets", "Shaders");
+        if (!AssetDatabase.IsValidFolder("Assets/Models")) AssetDatabase.CreateFolder("Assets", "Models");
         if (!AssetDatabase.IsValidFolder("Assets/Textures")) AssetDatabase.CreateFolder("Assets", "Textures");
         if (!AssetDatabase.IsValidFolder("Assets/Materials")) AssetDatabase.CreateFolder("Assets", "Materials");
         if (!AssetDatabase.IsValidFolder("Assets/Prefabs")) AssetDatabase.CreateFolder("Assets", "Prefabs");
