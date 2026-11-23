@@ -40,6 +40,12 @@ public static class CatWalkSceneBuilder
         if (shader == null) shader = Shader.Find("Standard");
 
         Material groundMat = GetOrCreateMaterial("Ground_Mat", new Color(0.35f, 0.68f, 0.35f), shader);
+        
+        // Shader & Material for Houdini Vertex Colors (Cd)
+        Shader vcShader = Shader.Find("Universal Render Pipeline/Custom/VertexColorLit");
+        if (vcShader == null) vcShader = shader;
+        Material forestMat = GetOrCreateMaterial("Forest_VertexColor_Mat", Color.white, vcShader);
+
         Material catOrangeMat = GetOrCreateMaterial("Cat_Orange_Mat", new Color(0.95f, 0.55f, 0.2f), shader);
         Material catWhiteMat = GetOrCreateMaterial("Cat_White_Mat", new Color(0.95f, 0.95f, 0.95f), shader);
         Material catPinkMat = GetOrCreateMaterial("Cat_Pink_Mat", new Color(0.96f, 0.65f, 0.7f), shader);
@@ -90,9 +96,9 @@ public static class CatWalkSceneBuilder
                 mc.sharedMesh = mf.sharedMesh;
 
                 MeshRenderer mr = mf.GetComponent<MeshRenderer>();
-                if (mr != null && (mr.sharedMaterial == null || mr.sharedMaterial.name.StartsWith("Default")))
+                if (mr != null)
                 {
-                    mr.sharedMaterial = groundMat;
+                    mr.sharedMaterial = forestMat; // Applies vertex colors (trees, bark, leaves, moss)
                 }
             }
         }
@@ -448,7 +454,7 @@ public static class CatWalkSceneBuilder
 
     static void EnsureDirectories()
     {
-        if (!AssetDatabase.IsValidFolder("Assets/Models")) AssetDatabase.CreateFolder("Assets", "Models");
+        if (!AssetDatabase.IsValidFolder("Assets/Shaders")) AssetDatabase.CreateFolder("Assets", "Shaders");`n        if (!AssetDatabase.IsValidFolder("Assets/Models")) AssetDatabase.CreateFolder("Assets", "Models");
         if (!AssetDatabase.IsValidFolder("Assets/Textures")) AssetDatabase.CreateFolder("Assets", "Textures");
         if (!AssetDatabase.IsValidFolder("Assets/Materials")) AssetDatabase.CreateFolder("Assets", "Materials");
         if (!AssetDatabase.IsValidFolder("Assets/Prefabs")) AssetDatabase.CreateFolder("Assets", "Prefabs");
