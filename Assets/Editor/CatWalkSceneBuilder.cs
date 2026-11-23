@@ -79,7 +79,7 @@ public static class CatWalkSceneBuilder
             if (!mi.addCollider) { mi.addCollider = true; needReimport = true; }
             if (mi.useFileUnits) { mi.useFileUnits = false; needReimport = true; }
             if (mi.useFileScale) { mi.useFileScale = false; needReimport = true; }
-            if (Mathf.Abs(mi.globalScale - 5f) > 0.1f) { mi.globalScale = 5f; needReimport = true; }
+            if (Mathf.Abs(mi.globalScale - 1f) > 0.01f) { mi.globalScale = 1f; needReimport = true; }
             if (needReimport)
             {
                 mi.SaveAndReimport();
@@ -251,7 +251,7 @@ public static class CatWalkSceneBuilder
         spawner.coinPrefab = coinPrefab;
         spawner.cat = cat.transform;
         spawner.maxCoins = 10;
-        spawner.spawnRadius = 1.8f;
+        spawner.spawnRadius = 8f;
         spawner.minDistanceFromCat = 3f;
 
         // 9. UI Canvas with Score
