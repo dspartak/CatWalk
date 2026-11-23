@@ -3,7 +3,7 @@
     Properties
     {
         _BaseColor("Color Tint", Color) = (1,1,1,1)
-        _Smoothness("Smoothness", Range(0, 1)) = 0.0
+        _AmbientBoost("Ambient Boost", Range(0, 1)) = 0.4
     }
     SubShader
     {
@@ -43,7 +43,7 @@
 
             CBUFFER_START(UnityPerMaterial)
                 float4 _BaseColor;
-                float _Smoothness;
+                float _AmbientBoost;
             CBUFFER_END
 
             Varyings vert(Attributes input)
@@ -68,7 +68,10 @@
                 half3 ambient = SampleSH(normalWS);
                 half3 direct = mainLight.color * NdotL;
                 
-                half3 finalColor = input.color.rgb * (ambient + direct);
+                // Предотвращаем излишне тёмные тени под деревьями
+                half3 lightTotal = max(ambient + direct, half3(_AmbientBoost, _AmbientBoost, _AmbientBoost));
+                
+                half3 finalColor = input.color.rgb * lightTotal;
                 return half4(finalColor, 1.0);
             }
             ENDHLSL

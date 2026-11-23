@@ -71,21 +71,29 @@ public static class CatWalkSceneBuilder
         // 4. Forest Environment & Ground
         DestroyIfExists("Forest");
         string fbxPath = "Assets/Models/forest.fbx";
+
+        ModelImporter mi = AssetImporter.GetAtPath(fbxPath) as ModelImporter;
+        if (mi != null)
+        {
+            bool needReimport = false;
+            if (!mi.addCollider) { mi.addCollider = true; needReimport = true; }
+            if (mi.useFileUnits) { mi.useFileUnits = false; needReimport = true; }
+            if (mi.useFileScale) { mi.useFileScale = false; needReimport = true; }
+            if (Mathf.Abs(mi.globalScale - 100f) > 0.1f) { mi.globalScale = 100f; needReimport = true; }
+            if (needReimport)
+            {
+                mi.SaveAndReimport();
+            }
+        }
+
         GameObject forestPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(fbxPath);
 
         if (forestPrefab != null)
         {
-            ModelImporter mi = AssetImporter.GetAtPath(fbxPath) as ModelImporter;
-            if (mi != null && !mi.addCollider)
-            {
-                mi.addCollider = true;
-                mi.SaveAndReimport();
-                forestPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(fbxPath);
-            }
-
             GameObject forest = Object.Instantiate(forestPrefab);
             forest.name = "Forest";
             forest.transform.position = Vector3.zero;
+            forest.transform.localScale = Vector3.one;
             forest.tag = "Ground";
 
             foreach (var mf in forest.GetComponentsInChildren<MeshFilter>())
@@ -98,7 +106,7 @@ public static class CatWalkSceneBuilder
                 MeshRenderer mr = mf.GetComponent<MeshRenderer>();
                 if (mr != null)
                 {
-                    mr.sharedMaterial = forestMat; // Applies vertex colors (trees, bark, leaves, moss)
+                    mr.sharedMaterial = forestMat; // Colored trees, leaves, ground
                 }
             }
         }
