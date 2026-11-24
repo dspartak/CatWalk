@@ -54,6 +54,13 @@ public class TapToMove : MonoBehaviour
 
     void HandleTap(Vector2 screenPos)
     {
+        // Не двигать котика при кликах по UI или когда открыто главное меню
+        if (UnityEngine.EventSystems.EventSystem.current != null && UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+            return;
+
+        if (MainMenuController.Instance != null && MainMenuController.Instance.isMenuOpen)
+            return;
+
         if (cam == null) cam = Camera.main;
         if (cam == null) return;
 

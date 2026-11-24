@@ -297,6 +297,122 @@ public static class CatWalkSceneBuilder
         ScoreManager sm = scoreMgrObj.AddComponent<ScoreManager>();
         sm.scoreText = tmp;
 
+        // 10.1 HUD Pause / Menu Button (в левом верхнем углу)
+        GameObject pauseBtnObj = new GameObject("PauseButton");
+        pauseBtnObj.transform.SetParent(canvasObj.transform, false);
+        RectTransform prt = pauseBtnObj.AddComponent<RectTransform>();
+        prt.anchorMin = new Vector2(0f, 1f);
+        prt.anchorMax = new Vector2(0f, 1f);
+        prt.pivot = new Vector2(0f, 1f);
+        prt.anchoredPosition = new Vector2(40f, -40f);
+        prt.sizeDelta = new Vector2(170f, 65f);
+
+        Image pImg = pauseBtnObj.AddComponent<Image>();
+        pImg.color = new Color(0.18f, 0.14f, 0.1f, 0.85f);
+        Button pBtn = pauseBtnObj.AddComponent<Button>();
+
+        GameObject pTextObj = new GameObject("Text");
+        pTextObj.transform.SetParent(pauseBtnObj.transform, false);
+        TextMeshProUGUI pText = pTextObj.AddComponent<TextMeshProUGUI>();
+        pText.text = "МЕНЮ";
+        pText.fontSize = 28;
+        pText.color = new Color(1f, 0.9f, 0.7f);
+        pText.fontStyle = FontStyles.Bold;
+        pText.alignment = TextAlignmentOptions.Center;
+        RectTransform pTextRt = pText.rectTransform;
+        pTextRt.anchorMin = Vector2.zero;
+        pTextRt.anchorMax = Vector2.one;
+        pTextRt.offsetMin = Vector2.zero;
+        pTextRt.offsetMax = Vector2.zero;
+
+        // 10.2 MainMenu (Стимпанк-меню Studio Agata)
+        string menuPath = "Assets/Textures/MainMenu_Agata.jpg";
+        AssetDatabase.ImportAsset(menuPath, ImportAssetOptions.ForceUpdate);
+        TextureImporter menuTi = AssetImporter.GetAtPath(menuPath) as TextureImporter;
+        if (menuTi != null && menuTi.textureType != TextureImporterType.Sprite)
+        {
+            menuTi.textureType = TextureImporterType.Sprite;
+            menuTi.spriteImportMode = SpriteImportMode.Single;
+            menuTi.alphaIsTransparency = true;
+            menuTi.SaveAndReimport();
+        }
+
+        Sprite menuSprite = AssetDatabase.LoadAssetAtPath<Sprite>(menuPath);
+
+        GameObject menuObj = new GameObject("MainMenu");
+        menuObj.transform.SetParent(canvasObj.transform, false);
+
+        RectTransform menuRt = menuObj.AddComponent<RectTransform>();
+        menuRt.anchorMin = Vector2.zero;
+        menuRt.anchorMax = Vector2.one;
+        menuRt.offsetMin = Vector2.zero;
+        menuRt.offsetMax = Vector2.zero;
+
+        Image menuBg = menuObj.AddComponent<Image>();
+        menuBg.color = new Color(0.06f, 0.04f, 0.03f, 0.75f);
+
+        CanvasGroup menuCg = menuObj.AddComponent<CanvasGroup>();
+        MainMenuController menuCtrl = menuObj.AddComponent<MainMenuController>();
+
+        // Карточка меню по центру с артом
+        GameObject cardObj = new GameObject("MenuCard");
+        cardObj.transform.SetParent(menuObj.transform, false);
+        RectTransform cardRt = cardObj.AddComponent<RectTransform>();
+        cardRt.anchorMin = new Vector2(0.5f, 0.5f);
+        cardRt.anchorMax = new Vector2(0.5f, 0.5f);
+        cardRt.pivot = new Vector2(0.5f, 0.5f);
+        cardRt.anchoredPosition = Vector2.zero;
+        cardRt.sizeDelta = new Vector2(1024f, 983f);
+        cardRt.localScale = new Vector3(0.88f, 0.88f, 1f);
+
+        Image cardImg = cardObj.AddComponent<Image>();
+        if (menuSprite != null)
+        {
+            cardImg.sprite = menuSprite;
+            cardImg.preserveAspect = true;
+        }
+
+        // Кнопка "Новая игра" (поверх таблички на арте)
+        GameObject newGameObj = new GameObject("Button_NewGame");
+        newGameObj.transform.SetParent(cardObj.transform, false);
+        RectTransform ngRt = newGameObj.AddComponent<RectTransform>();
+        ngRt.anchorMin = new Vector2(0.5f, 0.5f);
+        ngRt.anchorMax = new Vector2(0.5f, 0.5f);
+        ngRt.pivot = new Vector2(0.5f, 0.5f);
+        ngRt.anchoredPosition = new Vector2(0f, -25f);
+        ngRt.sizeDelta = new Vector2(620f, 150f);
+
+        Image ngImg = newGameObj.AddComponent<Image>();
+        ngImg.color = new Color(1f, 1f, 1f, 0.002f);
+        Button ngBtn = newGameObj.AddComponent<Button>();
+        ColorBlock ngCb = ngBtn.colors;
+        ngCb.highlightedColor = new Color(1f, 0.85f, 0.4f, 0.25f);
+        ngCb.pressedColor = new Color(0.5f, 0.3f, 0.1f, 0.4f);
+        ngBtn.colors = ngCb;
+
+        // Кнопка "Выйти" (поверх таблички на арте)
+        GameObject exitObj = new GameObject("Button_Exit");
+        exitObj.transform.SetParent(cardObj.transform, false);
+        RectTransform exitRt = exitObj.AddComponent<RectTransform>();
+        exitRt.anchorMin = new Vector2(0.5f, 0.5f);
+        exitRt.anchorMax = new Vector2(0.5f, 0.5f);
+        exitRt.pivot = new Vector2(0.5f, 0.5f);
+        exitRt.anchoredPosition = new Vector2(0f, -235f);
+        exitRt.sizeDelta = new Vector2(460f, 105f);
+
+        Image exitImg = exitObj.AddComponent<Image>();
+        exitImg.color = new Color(1f, 1f, 1f, 0.002f);
+        Button exitBtn = exitObj.AddComponent<Button>();
+        ColorBlock exitCb = exitBtn.colors;
+        exitCb.highlightedColor = new Color(1f, 0.85f, 0.4f, 0.25f);
+        exitCb.pressedColor = new Color(0.5f, 0.3f, 0.1f, 0.4f);
+        exitBtn.colors = exitCb;
+
+        // Привязываем кнопки к контроллеру
+        menuCtrl.newGameButton = ngBtn;
+        menuCtrl.exitButton = exitBtn;
+        menuCtrl.pauseButton = pBtn;
+
         // 10.5 SplashScreen (Studio Agata - 3 sec)
         string splashPath = "Assets/Textures/StudioAgata_Splash.jpg";
         TextureImporter ti = AssetImporter.GetAtPath(splashPath) as TextureImporter;
