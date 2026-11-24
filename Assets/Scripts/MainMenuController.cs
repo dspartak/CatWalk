@@ -125,6 +125,10 @@ public class MainMenuController : MonoBehaviour
         {
             gearsBackground.SetActive(visible);
         }
+        if (pauseButton != null)
+        {
+            pauseButton.gameObject.SetActive(!visible);
+        }
         if (!visible) gameObject.SetActive(false);
     }
 
@@ -137,6 +141,7 @@ public class MainMenuController : MonoBehaviour
             canvasGroup.blocksRaycasts = true;
             canvasGroup.interactable = true;
             if (gearsBackground != null) gearsBackground.SetActive(true);
+            if (pauseButton != null) pauseButton.gameObject.SetActive(false);
         }
 
         float startAlpha = canvasGroup.alpha;
@@ -156,6 +161,7 @@ public class MainMenuController : MonoBehaviour
         if (!enableRaycasts)
         {
             if (gearsBackground != null) gearsBackground.SetActive(false);
+            if (pauseButton != null) pauseButton.gameObject.SetActive(true);
             gameObject.SetActive(false);
         }
     }
