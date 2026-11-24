@@ -45,6 +45,10 @@ public static class CatWalkSceneBuilder
         Shader vcShader = Shader.Find("Universal Render Pipeline/Custom/VertexColorLit");
         if (vcShader == null) vcShader = shader;
         Material forestMat = GetOrCreateMaterial("Forest_VertexColor_Mat", Color.white, vcShader);
+        if (forestMat.HasProperty("_GroundColor"))
+        {
+            forestMat.SetColor("_GroundColor", new Color(0.35f, 0.65f, 0.32f, 1f));
+        }
 
         Material catOrangeMat = GetOrCreateMaterial("Cat_Orange_Mat", new Color(0.95f, 0.55f, 0.2f), shader);
         Material catWhiteMat = GetOrCreateMaterial("Cat_White_Mat", new Color(0.95f, 0.95f, 0.95f), shader);
@@ -111,10 +115,10 @@ public static class CatWalkSceneBuilder
             }
         }
 
-        // Safety base plane
+        // Safety base plane (ниже холмов, чтобы не пересекать 3D рельеф)
         GameObject ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
         ground.name = "Ground";
-        ground.transform.position = new Vector3(0, -0.05f, 0);
+        ground.transform.position = new Vector3(0, -2f, 0);
         ground.transform.localScale = new Vector3(5f, 1f, 5f);
         ground.tag = "Ground";
         ground.GetComponent<MeshRenderer>().sharedMaterial = groundMat;
@@ -271,7 +275,7 @@ public static class CatWalkSceneBuilder
             es.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
         }
 
-        // ScoreText (TextMeshPro)
+        // ScoreText (TextMeshPro) в правом верхнем углу
         GameObject scoreTextObj = new GameObject("ScoreText");
         scoreTextObj.transform.SetParent(canvasObj.transform, false);
         TextMeshProUGUI tmp = scoreTextObj.AddComponent<TextMeshProUGUI>();
@@ -279,13 +283,14 @@ public static class CatWalkSceneBuilder
         tmp.fontSize = 42;
         tmp.color = new Color(1f, 0.95f, 0.2f);
         tmp.fontStyle = FontStyles.Bold;
+        tmp.alignment = TextAlignmentOptions.TopRight;
 
         RectTransform rt = tmp.rectTransform;
-        rt.anchorMin = new Vector2(0f, 1f);
-        rt.anchorMax = new Vector2(0f, 1f);
-        rt.pivot = new Vector2(0f, 1f);
-        rt.anchoredPosition = new Vector2(40f, -40f);
-        rt.sizeDelta = new Vector2(500f, 80f);
+        rt.anchorMin = new Vector2(1f, 1f); // Правый верхний угол
+        rt.anchorMax = new Vector2(1f, 1f);
+        rt.pivot = new Vector2(1f, 1f);
+        rt.anchoredPosition = new Vector2(-40f, -40f);
+        rt.sizeDelta = new Vector2(450f, 80f);
 
         // 10. ScoreManager
         GameObject scoreMgrObj = new GameObject("ScoreManager");

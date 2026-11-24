@@ -2,8 +2,8 @@
 {
     Properties
     {
-        _BaseColor("Color Tint", Color) = (1,1,1,1)
-        _AmbientBoost("Ambient Boost", Range(0, 1)) = 0.4
+        _GroundColor("Ground Meadow Color", Color) = (0.36, 0.65, 0.32, 1)
+        _AmbientBoost("Ambient Boost", Range(0, 1)) = 0.45
     }
     SubShader
     {
@@ -42,7 +42,7 @@
             };
 
             CBUFFER_START(UnityPerMaterial)
-                float4 _BaseColor;
+                float4 _GroundColor;
                 float _AmbientBoost;
             CBUFFER_END
 
@@ -55,7 +55,12 @@
                 output.positionCS = posInputs.positionCS;
                 output.positionWS = posInputs.positionWS;
                 output.normalWS = normInputs.normalWS;
-                output.color = input.color * _BaseColor;
+
+                // Заменяем белый/серый непокрашенный рельеф из Houdini на сочный цвет лесной поляны
+                half isWhite = step(0.92, input.color.r) * step(0.92, input.color.g) * step(0.92, input.color.b);
+                half3 col = lerp(input.color.rgb, _GroundColor.rgb, isWhite);
+
+                output.color = float4(col, 1.0);
                 return output;
             }
 
@@ -68,9 +73,7 @@
                 half3 ambient = SampleSH(normalWS);
                 half3 direct = mainLight.color * NdotL;
                 
-                // Предотвращаем излишне тёмные тени под деревьями
                 half3 lightTotal = max(ambient + direct, half3(_AmbientBoost, _AmbientBoost, _AmbientBoost));
-                
                 half3 finalColor = input.color.rgb * lightTotal;
                 return half4(finalColor, 1.0);
             }
