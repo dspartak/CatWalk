@@ -325,8 +325,138 @@ public static class CatWalkSceneBuilder
         pTextRt.offsetMin = Vector2.zero;
         pTextRt.offsetMax = Vector2.zero;
 
-        // 10.2 MainMenu (Стимпанк-меню Studio Agata)
-        string menuPath = "Assets/Textures/MainMenu_Agata.jpg";
+        // 10.2 3D Steampunk Gears Background (задник меню из геометрии шестеренок)
+        DestroyIfExists("MenuGearsBackground");
+        GameObject gearsRoot = new GameObject("MenuGearsBackground");
+        gearsRoot.transform.SetParent(cam.transform, false);
+        gearsRoot.transform.localPosition = new Vector3(0f, 0f, 4.2f);
+        gearsRoot.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
+
+        // Материал для шестеренок
+        Material gearMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Steampunk_Bronze_Mat.mat");
+        if (gearMat == null)
+        {
+            Shader urpLit = Shader.Find("Universal Render Pipeline/Lit");
+            if (urpLit == null) urpLit = Shader.Find("Standard");
+            gearMat = new Material(urpLit);
+            gearMat.color = new Color(0.85f, 0.65f, 0.35f, 1f);
+            if (gearMat.HasProperty("_Metallic")) gearMat.SetFloat("_Metallic", 0.85f);
+            if (gearMat.HasProperty("_Smoothness")) gearMat.SetFloat("_Smoothness", 0.65f);
+            AssetDatabase.CreateAsset(gearMat, "Assets/Materials/Steampunk_Bronze_Mat.mat");
+        }
+
+        // Загрузка модели шестеренки
+        GameObject gearPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Models/single_gear.fbx");
+        Mesh gearMesh = null;
+        if (gearPrefab != null)
+        {
+            MeshFilter mf = gearPrefab.GetComponentInChildren<MeshFilter>();
+            if (mf != null) gearMesh = mf.sharedMesh;
+        }
+
+        if (gearMesh != null)
+        {
+            // Раскладка шестеренок разного размера вокруг и за плашкой меню
+            Vector3[] positions = new Vector3[]
+            {
+                // Слева от таблички
+                new Vector3(-2.6f, 0.6f, 0.1f),
+                new Vector3(-2.3f, -0.9f, 0.2f),
+                new Vector3(-2.9f, -0.2f, 0.05f),
+                new Vector3(-2.1f, 1.6f, 0.3f),
+                
+                // Справа от таблички
+                new Vector3(2.6f, 0.6f, 0.1f),
+                new Vector3(2.3f, -0.9f, 0.2f),
+                new Vector3(2.9f, -0.2f, 0.05f),
+                new Vector3(2.1f, 1.6f, 0.3f),
+                
+                // Сверху (над котиком с крыльями)
+                new Vector3(0f, 2.2f, 0.15f),
+                new Vector3(-1.2f, 2.0f, 0.05f),
+                new Vector3(1.2f, 2.0f, 0.25f),
+                
+                // Снизу (под табличкой STUDIO)
+                new Vector3(0f, -2.1f, 0.15f),
+                new Vector3(-1.2f, -1.9f, 0.05f),
+                new Vector3(1.2f, -1.9f, 0.25f),
+
+                // По углам (глубокий задний слой)
+                new Vector3(-3.2f, 1.9f, 0.4f),
+                new Vector3(3.2f, 1.9f, 0.4f),
+                new Vector3(-3.2f, -1.9f, 0.4f),
+                new Vector3(3.2f, -1.9f, 0.4f)
+            };
+
+            float[] scales = new float[]
+            {
+                1.3f, 1.1f, 1.4f, 0.9f,
+                1.3f, 1.1f, 1.4f, 0.9f,
+                1.5f, 1.1f, 1.2f,
+                1.3f, 1.0f, 1.2f,
+                1.6f, 1.6f, 1.6f, 1.6f
+            };
+
+            float[] speeds = new float[]
+            {
+                35f, -45f, 25f, -50f,
+                -35f, 45f, -25f, 50f,
+                -20f, 40f, -35f,
+                25f, -38f, 42f,
+                -15f, 15f, 18f, -18f
+            };
+
+            for (int i = 0; i < positions.Length; i++)
+            {
+                GameObject gObj = new GameObject("MenuGear_" + i);
+                gObj.transform.SetParent(gearsRoot.transform, false);
+                gObj.transform.localPosition = positions[i];
+                gObj.transform.localRotation = Quaternion.Euler(90f, (i * 43f) % 360f, 0f);
+                gObj.transform.localScale = Vector3.one * scales[i];
+
+                MeshFilter gmf = gObj.AddComponent<MeshFilter>();
+                gmf.sharedMesh = gearMesh;
+                MeshRenderer gmr = gObj.AddComponent<MeshRenderer>();
+                gmr.sharedMaterial = gearMat;
+
+                SteampunkGearRotator rot = gObj.AddComponent<SteampunkGearRotator>();
+                rot.rotationSpeed = speeds[i];
+                rot.rotationAxis = Vector3.up; // ось вращения цилиндрической шестерни
+            }
+        }
+
+        // Тёмная задняя панель за шестеренками для глубины и контраста
+        GameObject backdrop = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        backdrop.name = "MenuBackdrop";
+        backdrop.transform.SetParent(gearsRoot.transform, false);
+        backdrop.transform.localPosition = new Vector3(0f, 0f, 0.6f);
+        backdrop.transform.localRotation = Quaternion.identity;
+        backdrop.transform.localScale = new Vector3(14f, 9f, 1f);
+        Object.DestroyImmediate(backdrop.GetComponent<Collider>());
+        
+        Material darkMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Menu_Dark_Backdrop.mat");
+        if (darkMat == null)
+        {
+            Shader unlit = Shader.Find("Universal Render Pipeline/Unlit");
+            if (unlit == null) unlit = Shader.Find("Unlit/Color");
+            darkMat = new Material(unlit);
+            darkMat.color = new Color(0.08f, 0.06f, 0.05f, 1f);
+            AssetDatabase.CreateAsset(darkMat, "Assets/Materials/Menu_Dark_Backdrop.mat");
+        }
+        backdrop.GetComponent<MeshRenderer>().sharedMaterial = darkMat;
+
+        // Точечный тёплый свет на шестерёнках для красивых бликов металла
+        GameObject gearLightObj = new GameObject("GearPointLight");
+        gearLightObj.transform.SetParent(gearsRoot.transform, false);
+        gearLightObj.transform.localPosition = new Vector3(0f, 0.5f, -0.8f);
+        Light gLight = gearLightObj.AddComponent<Light>();
+        gLight.type = LightType.Point;
+        gLight.color = new Color(1f, 0.88f, 0.65f);
+        gLight.range = 7f;
+        gLight.intensity = 1.6f;
+
+        // 10.3 MainMenu UI (Стимпанк-меню Studio Agata с прозрачным фоном вокруг плашки)
+        string menuPath = "Assets/Textures/MainMenu_Agata.png";
         AssetDatabase.ImportAsset(menuPath, ImportAssetOptions.ForceUpdate);
         TextureImporter menuTi = AssetImporter.GetAtPath(menuPath) as TextureImporter;
         if (menuTi != null && menuTi.textureType != TextureImporterType.Sprite)
@@ -349,10 +479,11 @@ public static class CatWalkSceneBuilder
         menuRt.offsetMax = Vector2.zero;
 
         Image menuBg = menuObj.AddComponent<Image>();
-        menuBg.color = new Color(0.06f, 0.04f, 0.03f, 0.75f);
+        menuBg.color = new Color(0f, 0f, 0f, 0.001f); // прозрачный, чтобы 3D шестеренки были видны сзади
 
         CanvasGroup menuCg = menuObj.AddComponent<CanvasGroup>();
         MainMenuController menuCtrl = menuObj.AddComponent<MainMenuController>();
+        menuCtrl.gearsBackground = gearsRoot;
 
         // Карточка меню по центру с артом
         GameObject cardObj = new GameObject("MenuCard");

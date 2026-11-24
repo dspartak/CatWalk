@@ -15,6 +15,9 @@ public class MainMenuController : MonoBehaviour
     public Button exitButton;
     public Button pauseButton;
 
+    [Header("3D Шестеренки (задник)")]
+    public GameObject gearsBackground;
+
     [Header("Анимация")]
     public float fadeDuration = 0.35f;
 
@@ -118,6 +121,10 @@ public class MainMenuController : MonoBehaviour
             canvasGroup.blocksRaycasts = visible;
             canvasGroup.interactable = visible;
         }
+        if (gearsBackground != null)
+        {
+            gearsBackground.SetActive(visible);
+        }
         if (!visible) gameObject.SetActive(false);
     }
 
@@ -129,6 +136,7 @@ public class MainMenuController : MonoBehaviour
         {
             canvasGroup.blocksRaycasts = true;
             canvasGroup.interactable = true;
+            if (gearsBackground != null) gearsBackground.SetActive(true);
         }
 
         float startAlpha = canvasGroup.alpha;
@@ -147,6 +155,7 @@ public class MainMenuController : MonoBehaviour
 
         if (!enableRaycasts)
         {
+            if (gearsBackground != null) gearsBackground.SetActive(false);
             gameObject.SetActive(false);
         }
     }
