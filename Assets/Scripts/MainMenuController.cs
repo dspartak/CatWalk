@@ -15,6 +15,9 @@ public class MainMenuController : MonoBehaviour
     public Button exitButton;
     public Button pauseButton;
 
+    [Header("HUD")]
+    public GameObject scoreText;
+
     [Header("3D Шестеренки (задник)")]
     public GameObject gearsBackground;
 
@@ -129,6 +132,10 @@ public class MainMenuController : MonoBehaviour
         {
             pauseButton.gameObject.SetActive(!visible);
         }
+        if (scoreText != null)
+        {
+            scoreText.SetActive(!visible);
+        }
         if (!visible) gameObject.SetActive(false);
     }
 
@@ -142,6 +149,7 @@ public class MainMenuController : MonoBehaviour
             canvasGroup.interactable = true;
             if (gearsBackground != null) gearsBackground.SetActive(true);
             if (pauseButton != null) pauseButton.gameObject.SetActive(false);
+            if (scoreText != null) scoreText.SetActive(false);
         }
 
         float startAlpha = canvasGroup.alpha;
@@ -162,6 +170,7 @@ public class MainMenuController : MonoBehaviour
         {
             if (gearsBackground != null) gearsBackground.SetActive(false);
             if (pauseButton != null) pauseButton.gameObject.SetActive(true);
+            if (scoreText != null) scoreText.SetActive(true);
             gameObject.SetActive(false);
         }
     }

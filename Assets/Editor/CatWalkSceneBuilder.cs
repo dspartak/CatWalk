@@ -291,6 +291,7 @@ public static class CatWalkSceneBuilder
         rt.pivot = new Vector2(1f, 1f);
         rt.anchoredPosition = new Vector2(-40f, -40f);
         rt.sizeDelta = new Vector2(450f, 80f);
+        scoreTextObj.SetActive(false); // Скрыт на старте, пока открыто меню
 
         // 10. ScoreManager
         GameObject scoreMgrObj = new GameObject("ScoreManager");
@@ -326,12 +327,27 @@ public static class CatWalkSceneBuilder
         pTextRt.offsetMin = Vector2.zero;
         pTextRt.offsetMax = Vector2.zero;
 
-        // 10.2 3D Steampunk Gears Background (задник меню из геометрии шестеренок)
+        // 10.2 Изолированная 3D-студия шестеренок (MenuGearsStudio)
+        // Расположена высоко над лесом (Y = 100), поэтому никакие деревья уровня никогда не попадут в кадр!
+        DestroyIfExists("MenuGearsStudio");
         DestroyIfExists("MenuGearsBackground");
-        GameObject gearsRoot = new GameObject("MenuGearsBackground");
-        gearsRoot.transform.SetParent(cam.transform, false);
-        gearsRoot.transform.localPosition = new Vector3(0f, 0f, 4.0f);
-        gearsRoot.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
+        
+        GameObject studioRoot = new GameObject("MenuGearsStudio");
+        studioRoot.transform.position = new Vector3(0f, 100f, 0f);
+
+        // Собственная камера студии меню
+        GameObject menuCamObj = new GameObject("MenuCamera");
+        menuCamObj.transform.SetParent(studioRoot.transform, false);
+        menuCamObj.transform.localPosition = new Vector3(0f, 0f, -4.5f);
+        menuCamObj.transform.localRotation = Quaternion.identity;
+
+        Camera menuCam = menuCamObj.AddComponent<Camera>();
+        menuCam.clearFlags = CameraClearFlags.SolidColor;
+        menuCam.backgroundColor = new Color(0.06f, 0.04f, 0.04f, 1f);
+        menuCam.fieldOfView = 50f;
+        menuCam.depth = 1; // рендерится поверх основной камеры
+        menuCam.nearClipPlane = 0.1f;
+        menuCam.farClipPlane = 50f;
 
         // Материал для шестеренок (насыщенная двухсторонняя латунь/бронза с бликами)
         Material gearMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Steampunk_Bronze_Mat.mat");
@@ -345,9 +361,9 @@ public static class CatWalkSceneBuilder
         gearMat.color = new Color(0.96f, 0.76f, 0.42f, 1f);
         if (gearMat.HasProperty("_Metallic")) gearMat.SetFloat("_Metallic", 0.9f);
         if (gearMat.HasProperty("_Smoothness")) gearMat.SetFloat("_Smoothness", 0.72f);
-        if (gearMat.HasProperty("_Cull")) gearMat.SetFloat("_Cull", 0f); // двухсторонний рендер (без отсечения граней)
+        if (gearMat.HasProperty("_Cull")) gearMat.SetFloat("_Cull", 0f); // двухсторонний рендер
 
-        // Загрузка модели шестеренки
+        // Загрузка модели шестеренки (с нормалями и UV)
         GameObject gearPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Models/single_gear.fbx");
         Mesh gearMesh = null;
         if (gearPrefab != null)
@@ -416,9 +432,9 @@ public static class CatWalkSceneBuilder
             for (int i = 0; i < positions.Length; i++)
             {
                 GameObject gObj = new GameObject("MenuGear_" + i);
-                gObj.transform.SetParent(gearsRoot.transform, false);
+                gObj.transform.SetParent(studioRoot.transform, false);
                 gObj.transform.localPosition = positions[i];
-                // -90 градусов по X, чтобы передняя грань шестерни смотрела на камеру
+                // -90 градусов по X, чтобы передняя грань шестерни смотрела на камеру меню
                 gObj.transform.localRotation = Quaternion.Euler(-90f, (i * 41f) % 360f, 0f);
                 gObj.transform.localScale = Vector3.one * scales[i];
 
@@ -433,11 +449,11 @@ public static class CatWalkSceneBuilder
             }
         }
 
-        // Тёмный задний фон позади всех шестеренок (полностью перекрывает 3D-лес на любых экранах)
+        // Тёмный задний фон студии
         GameObject backdrop = GameObject.CreatePrimitive(PrimitiveType.Quad);
         backdrop.name = "MenuBackdrop";
-        backdrop.transform.SetParent(gearsRoot.transform, false);
-        backdrop.transform.localPosition = new Vector3(0f, 0f, 0.8f);
+        backdrop.transform.SetParent(studioRoot.transform, false);
+        backdrop.transform.localPosition = new Vector3(0f, 0f, 1.2f);
         backdrop.transform.localRotation = Quaternion.identity;
         backdrop.transform.localScale = new Vector3(32f, 20f, 1f);
         Object.DestroyImmediate(backdrop.GetComponent<Collider>());
@@ -453,15 +469,24 @@ public static class CatWalkSceneBuilder
         darkMat.color = new Color(0.06f, 0.04f, 0.04f, 1f);
         backdrop.GetComponent<MeshRenderer>().sharedMaterial = darkMat;
 
-        // Яркий точечный тёплый свет на шестерёнках для насыщенных металлических бликов
-        GameObject gearLightObj = new GameObject("GearPointLight");
-        gearLightObj.transform.SetParent(gearsRoot.transform, false);
-        gearLightObj.transform.localPosition = new Vector3(0f, 0.5f, -1.2f);
-        Light gLight = gearLightObj.AddComponent<Light>();
-        gLight.type = LightType.Point;
-        gLight.color = new Color(1f, 0.92f, 0.75f);
-        gLight.range = 10f;
-        gLight.intensity = 3.5f;
+        // Двойное тёплое студийное освещение для сочных металлических бликов
+        GameObject lightObj1 = new GameObject("StudioLight_Left");
+        lightObj1.transform.SetParent(studioRoot.transform, false);
+        lightObj1.transform.localPosition = new Vector3(-2f, 1f, -2.5f);
+        Light l1 = lightObj1.AddComponent<Light>();
+        l1.type = LightType.Point;
+        l1.color = new Color(1f, 0.9f, 0.65f);
+        l1.range = 10f;
+        l1.intensity = 3.5f;
+
+        GameObject lightObj2 = new GameObject("StudioLight_Right");
+        lightObj2.transform.SetParent(studioRoot.transform, false);
+        lightObj2.transform.localPosition = new Vector3(2f, -1f, -2.5f);
+        Light l2 = lightObj2.AddComponent<Light>();
+        l2.type = LightType.Point;
+        l2.color = new Color(1f, 0.82f, 0.5f);
+        l2.range = 10f;
+        l2.intensity = 3.5f;
 
         // 10.3 MainMenu UI (Стимпанк-меню Studio Agata с прозрачным фоном вокруг плашки)
         string menuPath = "Assets/Textures/MainMenu_Agata.png";
@@ -491,7 +516,7 @@ public static class CatWalkSceneBuilder
 
         CanvasGroup menuCg = menuObj.AddComponent<CanvasGroup>();
         MainMenuController menuCtrl = menuObj.AddComponent<MainMenuController>();
-        menuCtrl.gearsBackground = gearsRoot;
+        menuCtrl.gearsBackground = studioRoot;
 
         // Карточка меню по центру с артом
         GameObject cardObj = new GameObject("MenuCard");
@@ -547,10 +572,11 @@ public static class CatWalkSceneBuilder
         exitCb.pressedColor = new Color(0.5f, 0.3f, 0.1f, 0.4f);
         exitBtn.colors = exitCb;
 
-        // Привязываем кнопки к контроллеру
+        // Привязываем кнопки и HUD к контроллеру
         menuCtrl.newGameButton = ngBtn;
         menuCtrl.exitButton = exitBtn;
         menuCtrl.pauseButton = pBtn;
+        menuCtrl.scoreText = scoreTextObj;
 
         // 10.5 SplashScreen (Studio Agata - 3 sec)
         string splashPath = "Assets/Textures/StudioAgata_Splash.jpg";
