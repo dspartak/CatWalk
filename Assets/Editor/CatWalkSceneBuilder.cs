@@ -471,6 +471,8 @@ public static class CatWalkSceneBuilder
         dirLight.color = new Color(1f, 0.96f, 0.88f);
         dirLight.intensity = 1.2f;
 
+        SetupAppIcon();
+
         EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
         EditorSceneManager.SaveOpenScenes();
         AssetDatabase.SaveAssets();
@@ -591,6 +593,64 @@ public static class CatWalkSceneBuilder
         if (!AssetDatabase.IsValidFolder("Assets/Scripts")) AssetDatabase.CreateFolder("Assets", "Scripts");
     }
 
+    [MenuItem("CatWalk/🐱 Установить иконку приложения (Set App Icon)")]
+    public static void SetAppIconMenuItem()
+    {
+        SetupAppIcon();
+        EditorUtility.DisplayDialog("CatWalk", "Иконка приложения успешно установлена для всех платформ (включая Android)!", "OK");
+    }
+
+    public static void SetupAppIcon()
+    {
+        string iconPath = "Assets/Textures/AppIcon.jpg";
+        AssetDatabase.ImportAsset(iconPath, ImportAssetOptions.ForceUpdate);
+        TextureImporter ti = AssetImporter.GetAtPath(iconPath) as TextureImporter;
+        if (ti != null)
+        {
+            if (ti.textureType != TextureImporterType.Default || !ti.isReadable)
+            {
+                ti.textureType = TextureImporterType.Default;
+                ti.isReadable = true;
+                ti.textureCompression = TextureImporterCompression.Uncompressed;
+                ti.SaveAndReimport();
+            }
+        }
+
+        Texture2D icon = AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
+        if (icon == null)
+        {
+            Debug.LogError("CatWalk: Не удалось загрузить текстуру иконки: " + iconPath);
+            return;
+        }
+
+        // 1. Дефолтная иконка для всех платформ (Default Icon в PlayerSettings)
+        int[] defaultSizes = PlayerSettings.GetIconSizesForTargetGroup(BuildTargetGroup.Unknown);
+        Texture2D[] defaultIcons = new Texture2D[defaultSizes != null && defaultSizes.Length > 0 ? defaultSizes.Length : 1];
+        for (int i = 0; i < defaultIcons.Length; i++) defaultIcons[i] = icon;
+        PlayerSettings.SetIconsForTargetGroup(BuildTargetGroup.Unknown, defaultIcons);
+
+        // 2. Иконки для платформы Android
+        int[] androidSizes = PlayerSettings.GetIconSizesForTargetGroup(BuildTargetGroup.Android);
+        if (androidSizes != null && androidSizes.Length > 0)
+        {
+            Texture2D[] androidIcons = new Texture2D[androidSizes.Length];
+            for (int i = 0; i < androidIcons.Length; i++) androidIcons[i] = icon;
+            PlayerSettings.SetIconsForTargetGroup(BuildTargetGroup.Android, androidIcons);
+        }
+
+        // 3. Иконки для Standalone (Windows / macOS)
+        int[] standaloneSizes = PlayerSettings.GetIconSizesForTargetGroup(BuildTargetGroup.Standalone);
+        if (standaloneSizes != null && standaloneSizes.Length > 0)
+        {
+            Texture2D[] standaloneIcons = new Texture2D[standaloneSizes.Length];
+            for (int i = 0; i < standaloneIcons.Length; i++) standaloneIcons[i] = icon;
+            PlayerSettings.SetIconsForTargetGroup(BuildTargetGroup.Standalone, standaloneIcons);
+        }
+
+        AssetDatabase.SaveAssets();
+        Debug.Log("CatWalk: Иконка приложения успешно установлена в PlayerSettings!");
+    }
+
     [MenuItem("CatWalk/📱 Подготовить настройки для Android")]
     public static void ConfigureForAndroid()
     {
@@ -601,6 +661,7 @@ public static class CatWalkSceneBuilder
         PlayerSettings.defaultInterfaceOrientation = UIOrientation.LandscapeLeft;
         PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
         EnsureNewInputSystem();
+        SetupAppIcon();
         
         AssetDatabase.SaveAssets();
         Debug.Log("CatWalk: Проект переключён на платформу Android и настроен!");
